@@ -1,0 +1,10 @@
+version: '3.2'
+services:
+  scrollview-test:
+    build:
+      context: .
+      dockerfile: 'Dockerfile'
+    ports:
+      - '3000:80' #maps the port of the nginx server (80) to an external port 3000.
+    volumes:
+      - ./:/frontend
