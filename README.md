@@ -1,6 +1,4 @@
-# Play video when scrolled into view
-
-TODO
+# Docker react setup
 
 ## Install steps
 ### Docker desktop install instructions
