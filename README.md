@@ -78,46 +78,28 @@ At this point docker-desktop should manage to build
 
 ### Dockerize react app instructions 
 
-From: https://towardsdev.com/react-app-in-docker-a1128c7147ba
+Original tutorial from: https://towardsdev.com/react-app-in-docker-a1128c7147ba
+Dockerfile fixes from: https://mherman.org/blog/dockerizing-a-react-app/
 
 - npx create-react-app scrollview-test
 - cd scrollview-test
 - touch Dockerfile
 ```
-FROM node:14.9.0 AS build-step
-
-WORKDIR /build
-COPY package.json package-lock.json ./
-RUN npm install
-
+# build environment
+FROM node:18-alpine AS build-step
+WORKDIR /buildapp
+ENV PATH /buildapp/node_modules/.bin:$PATH
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm ci --silent
 COPY . .
 RUN npm run build
 
-FROM nginx:1.18-alpine
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY --from=build-step /build/build /frontend/build
-```
-- touch nginx.conf
-```
-user  nginx;
-worker_processes  1;
-
-events {
-  worker_connections  1024;
-}
-
-http {
-  include /etc/nginx/mime.types;
-  server {
-    listen 80;
-    root /frontend/build;
-    index index.html;
-
-    location / {
-      try_files $uri /index.html;
-    }
-  }
-}
+# production environment
+FROM nginx:1.22-alpine
+COPY --from=build-step /buildapp/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
 ```
 	
 - touch .dockerignore
@@ -138,7 +120,7 @@ services:
     ports:
       - '3000:80' #maps the port of the nginx server (80) to an external port 3000.
     volumes:
-      - ./:/frontend
+      - ./:/scrollview-frontend
 ```
 
 - docker-compose up -d --build scrollview-test
